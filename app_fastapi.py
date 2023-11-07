@@ -8,7 +8,10 @@ import cv2
 import tempfile
 import os
 
+
+
 app = FastAPI()
+
 
 # Load your Keras model
 model_path = 'Mobi_LRCN_model_LSTM_128_Date_Time_2023_10_31__22_51_35___Loss_0.3103679418563843___Accuracy_0.9332405924797058.h5'
