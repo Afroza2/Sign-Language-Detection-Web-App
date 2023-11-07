@@ -1,0 +1,50 @@
+# Python-related
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+venv3/
+env/
+bin/
+include/
+lib/
+Lib/
+Scripts/
+
+# Dependency management
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Editor-specific files
+.vscode/
+.idea/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# FastAPI specific
+__pycache__/
+.docker/
+.dockerignore
+Dockerfile
+
+# Compiled source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Other generated files
+*.pyc
+db.sqlite3
