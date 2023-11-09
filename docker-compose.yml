@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  streamlit:
+    build:
+      context: ./streamlit_app
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"  # Match the port to the one Streamlit runs on
+    depends_on:
+      - fastapi
+
+  fastapi:
+    build:
+      context: ./fastapi_app
+      dockerfile: Dockerfile
+    command: uvicorn app_fastapi:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+
+
+

@@ -48,3 +48,4 @@ Dockerfile
 # Other generated files
 *.pyc
 db.sqlite3
+../.DS_Store
