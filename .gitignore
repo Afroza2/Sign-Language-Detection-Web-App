@@ -30,7 +30,7 @@ pip-delete-this-directory.txt
 __pycache__/
 .docker/
 .dockerignore
-Dockerfile
+
 
 # Compiled source
 *.com
