@@ -9,12 +9,11 @@ import tempfile
 import os
 
 
-
 app = FastAPI()
 
 
 # Load your Keras model
-model_path = 'Mobi_LRCN_model_LSTM_128_Date_Time_2023_10_31__22_51_35___Loss_0.3103679418563843___Accuracy_0.9332405924797058.h5'
+model_path = 'model.h5'
 model = tensorflow.keras.models.load_model(model_path)
 
 CLASSES_LIST = ["Asthma", "Bandage", "Blood", "Blood Pressure", "Broke", "Burn", "Cold", "Constipated", "Cut", "Diarrhea", "Disease", "Doctor", "Emergency", "Fever", "Headache", "Infection", "Itch", "Nauseous", "Pain", "Patient", "Redness", "Sore Throat", "Urgent Care (UC)", "Anxiety", "Depressed", "Hospital", "Sprain", "Swallow", "Treatment", "Vomit"]
