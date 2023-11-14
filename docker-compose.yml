@@ -22,6 +22,8 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
+    image: fastapi
+    mem_limit: 2g
     networks:
       - sign
 
