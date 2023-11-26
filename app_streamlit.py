@@ -53,7 +53,7 @@ def app():
                 temp_file = io.BytesIO(uploaded_file.read())
 
                 # Read video frames and perform processing
-                video_reader = imageio.get_reader(temp_file, 'ffmpeg')
+                video_reader = imageio.get_reader(temp_file, 'ffmpeg', ffmpeg_path='ffmpeg')
                 predictions = []
 
                 for frame in video_reader:
