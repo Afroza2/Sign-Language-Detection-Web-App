@@ -2,9 +2,9 @@ import streamlit as st
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
-import imageio
+import tempfile
 import io
-from PIL import Image
+import cv2
 
 # Load your H5 model file
 model = tf.keras.models.load_model("model.h5")
@@ -18,17 +18,17 @@ SEQUENCE_LENGTH = 30
 
 # Function to preprocess the frame and make predictions
 def predict(frame):
-    # Resize the frame to match the model's expected size
-    img = image.load_img(io.BytesIO(frame), target_size=(IMAGE_WIDTH, IMAGE_HEIGHT))
+    # Repeat the frame to create a sequence of frames
+    frames_sequence = np.repeat(np.expand_dims(frame, axis=0), SEQUENCE_LENGTH, axis=0)
 
-    # Convert the image to a numpy array
-    img_array = image.img_to_array(img)
+    # Resize the frames to match the model's expected size
+    resized_frames = [image.img_to_array(image.load_img(io.BytesIO(f), target_size=(IMAGE_WIDTH, IMAGE_HEIGHT))) for f in frames_sequence]
 
-    # Expand the dimensions to match the input shape of the model
-    img_array = np.expand_dims(img_array, axis=0)
+    # Stack the resized frames along the time axis
+    input_sequence = np.stack(resized_frames, axis=0)
 
     # Perform prediction
-    predictions = model.predict(img_array)
+    predictions = model.predict(np.expand_dims(input_sequence, axis=0))
 
     # Get the predicted class index
     predicted_class_index = np.argmax(predictions)
@@ -50,18 +50,28 @@ def app():
 
         if st.button("Predict"):
             with st.spinner("Processing..."):
+                # Save the uploaded file to a temporary location
+                temp_file = tempfile.NamedTemporaryFile(delete=False)
+                temp_file.write(uploaded_file.read())
+
                 # Read video frames and perform processing
-                video_bytes = uploaded_file.read()
-                video_reader = imageio.get_reader(io.BytesIO(video_bytes), 'pillow')
+                cap = cv2.VideoCapture(temp_file.name)
                 predictions = []
 
-                for frame in video_reader:
+                while cap.isOpened():
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
+
                     # Convert the frame to bytes for prediction
-                    frame_bytes = imageio.imwrite(np.array(frame), format='JPEG').tobytes()
+                    _, buffer = cv2.imencode('.jpg', frame)
+                    frame_bytes = buffer.tobytes()
 
                     # Perform prediction on the frame
                     prediction = predict(frame_bytes)
                     predictions.append(prediction)
+
+                cap.release()
 
                 # Display the prediction result after processing the entire video
                 st.success(f"Predicted Class: {predictions[-1]}")
