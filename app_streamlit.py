@@ -2,10 +2,9 @@ import streamlit as st
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
-from PIL import Image
+import imageio
 import io
-import tempfile
-import subprocess
+from PIL import Image
 
 # Load your H5 model file
 model = tf.keras.models.load_model("model.h5")
@@ -17,22 +16,19 @@ IMAGE_WIDTH = 100
 IMAGE_HEIGHT = 100
 SEQUENCE_LENGTH = 30
 
-# Specify the path to ffmpeg
-ffmpeg_path = "/usr/local/bin/ffmpeg"  # Replace with the actual path to ffmpeg
-
 # Function to preprocess the frame and make predictions
 def predict(frame):
-    # Repeat the frame to create a sequence of frames
-    frames_sequence = np.repeat(np.expand_dims(frame, axis=0), SEQUENCE_LENGTH, axis=0)
+    # Resize the frame to match the model's expected size
+    img = image.load_img(io.BytesIO(frame), target_size=(IMAGE_WIDTH, IMAGE_HEIGHT))
 
-    # Resize the frames to match the model's expected size
-    resized_frames = [image.img_to_array(Image.open(io.BytesIO(f)).convert('RGB').resize((IMAGE_WIDTH, IMAGE_HEIGHT))) for f in frames_sequence]
+    # Convert the image to a numpy array
+    img_array = image.img_to_array(img)
 
-    # Stack the resized frames along the time axis
-    input_sequence = np.stack(resized_frames, axis=0)
+    # Expand the dimensions to match the input shape of the model
+    img_array = np.expand_dims(img_array, axis=0)
 
     # Perform prediction
-    predictions = model.predict(np.expand_dims(input_sequence, axis=0))
+    predictions = model.predict(img_array)
 
     # Get the predicted class index
     predicted_class_index = np.argmax(predictions)
@@ -54,27 +50,18 @@ def app():
 
         if st.button("Predict"):
             with st.spinner("Processing..."):
-                # Save the uploaded file to a temporary location
-                temp_file = tempfile.NamedTemporaryFile(delete=False)
-                temp_file.write(uploaded_file.read())
-
-                # Specify the command for subprocess
-                command = [ffmpeg_path, "-i", temp_file.name, "-f", "image2pipe", "-vcodec", "mjpeg", "-"]
-
-                # Use subprocess to read video frames
-                process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                out, err = process.communicate()
-
                 # Read video frames and perform processing
+                video_bytes = uploaded_file.read()
+                video_reader = imageio.get_reader(io.BytesIO(video_bytes), 'pillow')
                 predictions = []
 
-                for frame in out.split(b'\xff\xd8'):
-                    if frame:
-                        # Convert the frame to bytes for prediction
-                        frame_bytes = frame + b'\xff\xd8'
-                        # Perform prediction on the frame
-                        prediction = predict(frame_bytes)
-                        predictions.append(prediction)
+                for frame in video_reader:
+                    # Convert the frame to bytes for prediction
+                    frame_bytes = imageio.imwrite(np.array(frame), format='JPEG').tobytes()
+
+                    # Perform prediction on the frame
+                    prediction = predict(frame_bytes)
+                    predictions.append(prediction)
 
                 # Display the prediction result after processing the entire video
                 st.success(f"Predicted Class: {predictions[-1]}")
