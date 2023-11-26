@@ -5,6 +5,7 @@ from tensorflow.keras.preprocessing import image
 import tempfile
 import io
 from PIL import Image
+import imageio
 
 # Load your H5 model file
 model = tf.keras.models.load_model("model.h5")
