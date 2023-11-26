@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
-import cv2
+import imageio
 import tempfile
 import io
 
@@ -54,23 +54,18 @@ def app():
                 temp_file = tempfile.NamedTemporaryFile(delete=False)
                 temp_file.write(uploaded_file.read())
 
-                # Read video frames and perform processing
-                cap = cv2.VideoCapture(temp_file.name)
+                # Read video frames and perform processing using imageio
+                video_reader = imageio.get_reader(temp_file.name, 'ffmpeg')
                 predictions = []
 
-                while cap.isOpened():
-                    ret, frame = cap.read()
-                    if not ret:
-                        break
-
+                for frame in video_reader:
                     # Convert the frame to bytes for prediction
-                    frame_bytes = cv2.imencode('.jpg', frame)[1].tobytes()
+                    frame_bytes = image.img_as_ubyte(frame)
+                    frame_bytes = io.BytesIO(frame_bytes)
 
                     # Perform prediction on the frame
-                    prediction = predict(frame_bytes)
+                    prediction = predict(frame_bytes.read())
                     predictions.append(prediction)
-
-                cap.release()
 
                 # Display the prediction result after processing the entire video
                 st.success(f"Predicted Class: {predictions[-1]}")
