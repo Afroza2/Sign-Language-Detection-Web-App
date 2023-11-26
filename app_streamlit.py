@@ -2,10 +2,8 @@ import streamlit as st
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image
-import tempfile
 import io
-from PIL import Image
-from moviepy.editor import VideoFileClip
+import imageio
 
 # Load your H5 model file
 model = tf.keras.models.load_model("model.h5")
@@ -23,7 +21,7 @@ def predict(frame):
     frames_sequence = np.repeat(np.expand_dims(frame, axis=0), SEQUENCE_LENGTH, axis=0)
 
     # Resize the frames to match the model's expected size
-    resized_frames = [image.img_to_array(image.load_img(io.BytesIO(f), target_size=(IMAGE_WIDTH, IMAGE_HEIGHT), format='JPEG')) for f in frames_sequence]
+    resized_frames = [image.img_to_array(image.load_img(io.BytesIO(f), target_size=(IMAGE_WIDTH, IMAGE_HEIGHT))) for f in frames_sequence]
 
     # Stack the resized frames along the time axis
     input_sequence = np.stack(resized_frames, axis=0)
@@ -52,20 +50,17 @@ def app():
         if st.button("Predict"):
             with st.spinner("Processing..."):
                 # Save the uploaded file to a temporary location
-                temp_file = tempfile.NamedTemporaryFile(delete=False)
-                temp_file.write(uploaded_file.read())
+                temp_file = io.BytesIO(uploaded_file.read())
 
-                # Read video frames and perform processing using MoviePy
-                clip = VideoFileClip(temp_file.name)
+                # Read video frames and perform processing
+                video_reader = imageio.get_reader(temp_file, 'ffmpeg')
                 predictions = []
 
-                for frame in clip.iter_frames(fps=clip.fps):
+                for frame in video_reader:
                     # Convert the frame to bytes for prediction
-                    buffer = io.BytesIO()
-                    Image.fromarray(frame).convert('RGB').save(buffer, format='JPEG')
-                    frame_bytes = buffer.getvalue()
+                    frame_bytes = image.img_to_array(image.load_img(io.BytesIO(frame), target_size=(IMAGE_WIDTH, IMAGE_HEIGHT))).tobytes()
 
-    # Perform prediction on the frame
+                    # Perform prediction on the frame
                     prediction = predict(frame_bytes)
                     predictions.append(prediction)
 
