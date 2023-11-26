@@ -61,11 +61,11 @@ def app():
 
                 for frame in clip.iter_frames(fps=clip.fps):
                     # Convert the frame to bytes for prediction
-                    buffer = Image.fromarray(frame).convert('RGB').save(io.BytesIO(), format='JPEG')
-
+                    buffer = io.BytesIO()
+                    Image.fromarray(frame).convert('RGB').save(buffer, format='JPEG')
                     frame_bytes = buffer.getvalue()
 
-                    # Perform prediction on the frame
+    # Perform prediction on the frame
                     prediction = predict(frame_bytes)
                     predictions.append(prediction)
 
