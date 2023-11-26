@@ -55,13 +55,14 @@ def app():
                 temp_file = tempfile.NamedTemporaryFile(delete=False)
                 temp_file.write(uploaded_file.read())
 
-                # Read video frames and perform processing using moviepy
+                # Read video frames and perform processing using MoviePy
                 clip = VideoFileClip(temp_file.name)
                 predictions = []
 
                 for frame in clip.iter_frames(fps=clip.fps):
                     # Convert the frame to bytes for prediction
-                    frame_bytes = cv2.imencode('.jpg', frame)[1].tobytes()
+                    _, buffer = Image.fromarray(frame).convert('RGB').save(io.BytesIO(), format='JPEG')
+                    frame_bytes = buffer.getvalue()
 
                     # Perform prediction on the frame
                     prediction = predict(frame_bytes)
