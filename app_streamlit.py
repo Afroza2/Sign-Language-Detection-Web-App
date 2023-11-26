@@ -5,7 +5,7 @@ from tensorflow.keras.preprocessing import image
 import tempfile
 import io
 from PIL import Image
-import imageio
+from moviepy.editor import VideoFileClip
 
 # Load your H5 model file
 model = tf.keras.models.load_model("model.h5")
@@ -55,13 +55,15 @@ def app():
                 temp_file = tempfile.NamedTemporaryFile(delete=False)
                 temp_file.write(uploaded_file.read())
 
-                # Read video frames and perform processing
-                video_reader = imageio.get_reader(temp_file.name, 'ffmpeg')
+                # Read video frames and perform processing using moviepy
+                clip = VideoFileClip(temp_file.name)
                 predictions = []
 
-                for frame in video_reader:
+                for frame in clip.iter_frames(fps=clip.fps):
                     # Convert the frame to bytes for prediction
-                    frame_bytes = image.img_to_array(Image.fromarray(frame).convert('RGB'))
+                    frame_bytes = cv2.imencode('.jpg', frame)[1].tobytes()
+
+                    # Perform prediction on the frame
                     prediction = predict(frame_bytes)
                     predictions.append(prediction)
 
